@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from "next/image";
 import PromptForm from './components/PromptForm';
 import TodoListDisplay from './components/UIDisplay';
 import { TodoListType } from './utils/openaiUtils';
@@ -18,7 +17,6 @@ export default function Home() {
     setError(null);
     
     if (useMockData) {
-      // Use mock data
       const mockData = getMockTodoList(prompt);
       setTimeout(() => {
         setTodoList(mockData);
@@ -28,7 +26,6 @@ export default function Home() {
     }
     
     try {
-      // Using the actual API with OpenRouter
       const response = await fetch('/api/generate-ui', {
         method: 'POST',
         headers: {
@@ -37,7 +34,6 @@ export default function Home() {
         body: JSON.stringify({ prompt }),
       });
 
-      // Check for credit limit error (402)
       if (response.status === 402) {
         setError('API credit limit reached. Using mock data instead.');
         setUseMockData(true);
@@ -48,16 +44,28 @@ export default function Home() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        if (errorData.error === "Schema validation failed") {
+          console.error("Schema validation error details:", errorData.details);
+          console.log("Raw API response:", errorData.rawResponse);
+          setError(`Помилка валідації схеми. Переходимо на тестові дані.`);
+          
+          setUseMockData(true);
+          const mockData = getMockTodoList(prompt);
+          setTodoList(mockData);
+          return;
+        }
+        
         throw new Error(errorData.error || 'Failed to generate todo list');
       }
 
       const data = await response.json();
       setTodoList(data.todoList);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("API error:", err);
       setError(`${err.message || 'An error occurred'}. Using mock data instead.`);
       
-      // Fall back to mock data
       const mockData = getMockTodoList(prompt);
       setTimeout(() => {
         setTodoList(mockData);
@@ -67,33 +75,13 @@ export default function Home() {
     }
   };
 
-  const toggleMockData = () => {
-    setUseMockData(prev => !prev);
-  };
 
   return (
     <div className="min-h-screen p-8 pb-20 max-w-6xl mx-auto">
       <header className="mb-10 flex flex-col items-center">
-        <Image
-          className="dark:invert mb-6"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
+
         <h1 className="text-3xl font-bold text-center">Structured Output Demo - Todo Generator</h1>
-        <p className="text-center mt-2 text-gray-600 max-w-2xl">
-          Describe a todo list and we'll generate it using {useMockData ? 'mock data' : 'OpenRouter API with GPT-3.5 Turbo'} and Zod schema validation.
-        </p>
-        <div className="mt-4 flex gap-3">
-          <button 
-            onClick={toggleMockData} 
-            className="px-4 py-2 text-sm font-medium rounded bg-gray-100 hover:bg-gray-200"
-          >
-            {useMockData ? 'Switch to API' : 'Switch to Mock Data'}
-          </button>
-        </div>
+        
       </header>
 
       <main className="grid gap-10 md:grid-cols-2">
@@ -106,16 +94,6 @@ export default function Home() {
             </div>
           )}
           
-          <div className="mt-8 p-6 border rounded shadow-sm">
-            <h2 className="text-xl font-bold mb-4">How It Works</h2>
-            <ol className="list-decimal list-inside space-y-2">
-              <li>Enter a description of the todo list you want to generate</li>
-              <li>The prompt is sent to the {useMockData ? 'mock data generator' : 'OpenRouter API with GPT-3.5 Turbo'}</li>
-              <li>The response is validated against our Zod schema</li>
-              <li>The todo list is rendered in the browser</li>
-              <li>You can see both the visual output and the structured JSON</li>
-            </ol>
-          </div>
         </div>
         
         <div>

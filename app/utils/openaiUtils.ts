@@ -1,21 +1,23 @@
 import OpenAI from "openai";
 import { z } from "zod";
 
+// Create a simple Todo schema using Zod
 export const Todo = z.object({
   id: z.string().optional(),
   title: z.string(),
-  description: z.string().optional(),
+  description: z.string().optional().default(""),
   completed: z.boolean().default(false),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.string().optional(),
-});
+}).passthrough(); // Дозволяємо додаткові поля
 
 export type TodoType = z.infer<typeof Todo>;
 
+// Create a TodoList schema
 export const TodoList = z.object({
   name: z.string(),
   todos: z.array(Todo).default([]),
-});
+}).passthrough(); // Дозволяємо додаткові поля
 
 export type TodoListType = z.infer<typeof TodoList>;
 
