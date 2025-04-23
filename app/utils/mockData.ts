@@ -75,7 +75,6 @@ export const samplePersonalTodoList: TodoListType = {
   ]
 };
 
-// Helper function to get mock data based on prompt
 export function getMockTodoList(prompt: string): TodoListType {
   const lowercasePrompt = prompt.toLowerCase();
   
@@ -85,6 +84,5 @@ export function getMockTodoList(prompt: string): TodoListType {
     return samplePersonalTodoList;
   }
   
-  // Default to work todo list if no match
   return sampleWorkTodoList;
 } 

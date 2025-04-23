@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { TodoList } from "../../utils/openaiUtils";
 
-// Initialize OpenAI client configured for OpenRouter
 const openai = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY || "",
   baseURL: "https://openrouter.ai/api/v1",
@@ -15,7 +14,7 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, useGpt35 = false } = await request.json();
+    const { prompt = false } = await request.json();
 
     if (!prompt) {
       return NextResponse.json(
@@ -24,10 +23,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use a cheaper model (always use GPT-3.5 for this simpler task)
     const model = "openai/gpt-3.5-turbo";
 
-    // Call OpenRouter API with structured output
     const completion = await openai.chat.completions.create({
       model,
       messages: [
@@ -47,17 +44,14 @@ export async function POST(request: NextRequest) {
 
     console.log("Raw API response:", JSON.stringify(completion));
     
-    // Handle no choices in the response (credit issue)
     if (!completion.choices || completion.choices.length === 0) {
       console.error("No choices returned from API");
-      // Use mock data instead
       return NextResponse.json(
         { error: "API credit limit reached. Please use mock data." },
         { status: 402 }
       );
     }
     
-    // Process the raw response
     const rawResponseContent = completion.choices[0]?.message?.content || "{}";
     let parsedContent;
     
@@ -71,7 +65,6 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Validate against our schema
     try {
       const validatedTodoList = TodoList.parse(parsedContent);
       return NextResponse.json({ todoList: validatedTodoList });

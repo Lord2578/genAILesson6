@@ -1,8 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { zodResponseFormat } from "openai/helpers/zod";
 
-// Create a simple Todo schema using Zod
 export const Todo = z.object({
   id: z.string().optional(),
   title: z.string(),
@@ -14,7 +12,6 @@ export const Todo = z.object({
 
 export type TodoType = z.infer<typeof Todo>;
 
-// Create a TodoList schema
 export const TodoList = z.object({
   name: z.string(),
   todos: z.array(Todo).default([]),
@@ -56,7 +53,6 @@ export function convertToHTML(todoList: TodoListType): string {
 // Function to generate Todo list from a prompt using OpenRouter API
 export async function generateTodoList(prompt: string): Promise<TodoListType | null> {
   try {
-    // Using OpenAI client but configuring it for OpenRouter
     const openai = new OpenAI({
       apiKey: process.env.OPENROUTER_API_KEY || "",
       baseURL: "https://openrouter.ai/api/v1",
@@ -92,7 +88,6 @@ export async function generateTodoList(prompt: string): Promise<TodoListType | n
     const rawResponseContent = completion.choices[0]?.message?.content || "{}";
     const parsedContent = JSON.parse(rawResponseContent);
     
-    // Validate with our schema
     return TodoList.parse(parsedContent);
   } catch (error) {
     console.error("Error generating todo list:", error);
